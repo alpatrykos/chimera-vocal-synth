@@ -44,6 +44,22 @@ const Y_LENGTH: f64 = 1.25;
 /// The vowel between t or d and a tap, in speech (s): at 30 ms the folds, still apart after the
 /// stop, didn't voice it; at 40-50 ms the r is heard (a native listener chose 50 over 40).
 const TAP_LEAD: f64 = 0.05;
+/// Vowels (but y) last this many times what the duration rules give them, in speech. The rules
+/// are English's: they stretch a stressed vowel, and the last one of a phrase most. A Polish
+/// speaker's vowels were shorter, and stress lengthened them less (1.4 times, the rules' 1.76),
+/// while the consonants matched
+/// (0.84-0.98 of the rules' per phrase). Measured on one native speaker, four sentences (the
+/// Speak examples and one of sz/cz/rz), aligned with MFA's polish_mfa: stressed 88 ms against the
+/// rules' 144 (11 vowels), unstressed 63 against 82 (8), a phrase's last 107 against 198 (5).
+const VOWEL_STRESSED: f64 = 0.6;
+const VOWEL_UNSTRESSED: f64 = 0.75;
+/// A phrase's last vowel, which [`to_phrases`] sets.
+const VOWEL_FINAL: f64 = 0.55;
+
+/// A vowel the length factors above apply to (y keeps [`Y_LENGTH`]).
+fn shortened(ipa: &str) -> bool {
+    matches!(ipa, "a" | "ɛ" | "i" | "ɔ" | "u")
+}
 
 pub fn is_letter(c: char) -> bool {
     c.is_ascii_alphabetic() || "ąćęłńóśźżĄĆĘŁŃÓŚŹŻ".contains(c)
@@ -396,8 +412,8 @@ fn parse(typed: &str, before: Option<&str>) -> Parsed {
 }
 
 impl Parsed {
-    /// Each sound's segment, one per phone. `speech` gives long sounds their length (a sung note
-    /// sets its own) and puts [ə] between t or d and a tap ([`TAP_LEAD`]).
+    /// Each sound's segment, one per phone. `speech` gives long sounds and vowels their length (a
+    /// sung note sets its own) and puts [ə] between t or d and a tap ([`TAP_LEAD`]).
     fn segments(&self, speech: bool) -> Vec<Segment> {
         let mut nv = 0;
         let mut out = Vec::with_capacity(self.phones.len() + 1);
@@ -410,6 +426,8 @@ impl Parsed {
                 Some(GEMINATE)
             } else if p.ipa == "ɨ" {
                 Some(Y_LENGTH)
+            } else if shortened(p.ipa) {
+                Some(if stressed { VOWEL_STRESSED } else { VOWEL_UNSTRESSED })
             } else {
                 None
             };
@@ -575,6 +593,11 @@ pub fn to_phrases(text: &str) -> Vec<Phrase> {
         }
         if segs.is_empty() {
             return;
+        }
+        if let Some(v) = segs.iter_mut().rev().find(|s| s.ipa == "ɨ" || shortened(&s.ipa))
+            && shortened(&v.ipa)
+        {
+            v.length = Some(VOWEL_FINAL);
         }
         // a conjunction before the question word doesn't count ("A gdzie jesteś?")
         let first = said.iter().map(|w| w.rsplit(' ').next().unwrap_or(w)).find(|w| !LEADING.contains(w));

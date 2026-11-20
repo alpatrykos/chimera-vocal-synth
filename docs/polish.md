@@ -31,6 +31,7 @@ pronunciation), with no dictionary, onto the existing inventory (no new sounds).
 | Doubled letters | in speech one long consonant, 1.6 times its length (Anna [anːa]); in song it closes one note and opens the next |
 | r | one tap [ɾ]; after t or d, in speech, a 50 ms [ə] before it (tramwaj [təɾamvaj]): the tap is at the stop's place, so without it the tap merged into the stop and the voice came back only in the vowel ("tamwaj"). Sung onsets stay clusters |
 | y [ɨ] | a full vowel, 1.25 times the duration rules' /ɨ/ (theirs is English's reduced vowel, 110 ms) |
+| Vowel length | in speech, the other vowels are shorter than the duration rules', which are English's and stretch a stressed vowel and a phrase's last: 0.6 times stressed, 0.75 unstressed, 0.55 a phrase's last. Set from a native speaker's recordings of four sentences, aligned with MFA's polish_mfa: their consonants matched the rules', their vowels were 1.3 to 1.85 times shorter |
 | Stress | the penult, with the exceptions below |
 | Intonation | a question rises, unless it starts with a question word (co, kto, gdzie, jak, dlaczego...), perhaps after a conjunction ("A gdzie?"), and then falls like a statement |
 

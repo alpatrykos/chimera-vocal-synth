@@ -212,6 +212,38 @@ fn punctuation_makes_phrases_with_one_word_per_word_end() {
 }
 
 #[test]
+fn vowels_are_as_short_as_a_polish_speakers() {
+    // the duration rules are English's: before, a stressed vowel lasted 144 ms on average and a
+    // phrase's last 198, where a Polish speaker's lasted 88 and 107 ("masz" was 290 ms)
+    let ph = to_phrases("Dzień dobry, jak się masz? Dziękuję bardzo. Jedzie tramwaj, czy to prawda?");
+    let inputs: Vec<PhraseInput> = ph.iter().map(|p| PhraseInput { segments: p.segments.clone(), intonation: Some(p.intonation), pause: Some(p.pause) }).collect();
+    let plan = plan_phrases(&inputs, &PlanOptions { body: BodyMix::MALE, ..Default::default() });
+    let full = |s: &str| matches!(s, "a" | "ɛ" | "i" | "ɔ" | "u");
+    let (mut stressed, mut unstressed, mut last) = (Vec::new(), Vec::new(), Vec::new());
+    let mut k = 0;
+    for p in &ph {
+        let segs = &plan.segments[k..k + p.segments.len()];
+        k += p.segments.len();
+        let end = segs.iter().rposition(|s| full(&s.ipa) || s.ipa == "ɨ").unwrap();
+        for (i, s) in segs.iter().enumerate().filter(|(_, s)| full(&s.ipa)) {
+            let d = (s.t1 - s.t0) * 1000.0;
+            if i == end {
+                last.push(d)
+            } else if s.stress == Some(1) {
+                stressed.push(d)
+            } else {
+                unstressed.push(d)
+            }
+        }
+    }
+    let mean = |v: &[f64]| v.iter().sum::<f64>() / v.len() as f64;
+    let (st, un, la) = (mean(&stressed), mean(&unstressed), mean(&last));
+    assert!((70.0..110.0).contains(&st), "stressed {st:.0} ms");
+    assert!((50.0..80.0).contains(&un), "unstressed {un:.0} ms");
+    assert!((85.0..135.0).contains(&la), "a phrase's last {la:.0} ms");
+}
+
+#[test]
 fn every_sound_is_one_the_voice_can_make() {
     let text = "Pchnąć w tę łódź jeża lub ośm skrzyń fig. Zażółć gęślą jaźń! Dziękuję bardzo, trzej szczęśliwi chłopcy grzybów szukają w trzcinie.";
     let body = BodyMix::MALE;
